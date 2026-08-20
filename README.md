@@ -1,6 +1,6 @@
 # Route logistics prompts across model vendors
 
-The decision is to keep the official OpenAI Python client and send the logistics call with `model="auto"`. Infrai provides the OpenAI-compatible `base_url`, so vendor routing stays outside the shipment workflow and the operator-facing code does not need a branch for each provider.
+The decision is to keep the official OpenAI Python client and send the logistics call with `model="auto"`: Infrai provides the OpenAI-compatible `base_url`, so vendor routing stays outside the shipment workflow and the operator-facing code does not need a branch for each provider.
 
 This is a useful boundary for logistics features because a delay-triage prompt and provider selection change for different reasons. Direct vendor clients can expose every provider-specific control, while the small module here favors one stable request shape and one `INFRAI_API_KEY` when the feature needs automatic routing across vendors.
 
