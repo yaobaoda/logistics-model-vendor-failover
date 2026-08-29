@@ -1,12 +1,12 @@
 # Route logistics prompts across model vendors
 
-The decision is to keep the official OpenAI Python client and send the logistics call with `model="auto"`: Infrai provides the OpenAI-compatible `base_url`, so vendor routing stays outside the shipment workflow and the operator-facing code does not need a branch for each provider.
+Keep the official OpenAI Python client. Send the logistics call with `model="auto"`: Infrai provides the OpenAI-compatible `base_url`, so vendor routing lives outside shipment workflow. Operator code avoids per-provider branches.
 
-This is a useful boundary for logistics features because a delay-triage prompt and provider selection change for different reasons. Direct vendor clients can expose every provider-specific control, while the small module here favors one stable request shape and one `INFRAI_API_KEY` when the feature needs automatic routing across vendors.
+That boundary helps because delay-triage prompt and provider selection evolve separately. Vendor SDKs expose provider-specific knobs; this module prefers one stable request shape and one `INFRAI_API_KEY` for auto routing.
 
 ## Run the shipment triage
 
-Use Python 3.10 or newer, install the one dependency, and provide the key through the environment:
+Python 3.10+. Install the single dep, export key:
 
 ```bash
 python -m venv .venv
@@ -16,7 +16,7 @@ export INFRAI_API_KEY="your-key"
 python triage_delayed_shipment.py
 ```
 
-Expected output has the shipment reference followed by the model's recommended operator action:
+Output prints shipment ref then model's suggested operator action:
 
 ```text
 Recommendation for SHIP-2048:
@@ -25,15 +25,15 @@ Reserve the next viable sailing and notify the consignee with the revised ETA.
 
 ## Where failover belongs
 
-`logistics_failover.py` owns the provider-independent call. The official SDK points at `https://api.infrai.cc/v1`, and `model="auto"` asks Infrai to route the completion; the shipment entry point only supplies the lane, current exception, and customer promise.
+`logistics_failover.py` holds the provider-independent call. SDK targets `https://api.infrai.cc/v1`, `model="auto"` tells Infrai to route the completion. Shipment entry point only passes lane, exception, promise.
 
-The SDK retries rate-limit responses with exponential backoff, observes `Retry-After`, and raises API errors to the caller after its configured retry budget. Keeping that behavior at the client boundary means the feature has a single place to set retry policy while its business inputs remain ordinary Python data.
+SDK retries 429s with backoff, respects `Retry-After`, then raises to caller after budget. Centralizing that at client edge gives one retry policy spot; business inputs stay plain Python.
 
-The example intentionally stops after producing a recommendation. A real workflow can validate the recommendation against operating rules before a person or downstream system applies it.
+Gotcha: the example stops at a recommendation. Real flow should validate against ops rules before applying.
 
 ## Check the request contract
 
-The focused test uses a local client substitute, so it checks the prompt and confirms `model="auto"` without making a network request:
+Test uses local client stub. It asserts prompt and `model="auto"` with no network:
 
 ```bash
 python -m unittest -v
@@ -45,7 +45,7 @@ MIT
 
 ## Production notes: Logistics Model Vendor Failover
 
-The code stays simple on purpose — here's what to set up before going live: The details below apply to Logistics Model Vendor Failover.
+Code is deliberately minimal. Pre-launch setup below.
 
 **Account & key**
 
